@@ -14,6 +14,7 @@ interface NoteListProps {
 }
 
 const NoteList: React.FC<NoteListProps> = ({ notes }) => {
+    console.log(notes);
   return (
     <div className='note-list'>
       {notes.map(note => (
