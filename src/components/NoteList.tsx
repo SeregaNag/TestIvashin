@@ -3,7 +3,7 @@ import './NoteList.scss';
 import { Link } from 'react-router-dom'
 
 interface Item {
-  id: number;
+  id?: number;
   title: string;
   tags: string[];
   description: string;
@@ -14,7 +14,9 @@ interface NoteListProps {
 }
 
 const NoteList: React.FC<NoteListProps> = ({ notes }) => {
-    console.log(notes);
+   if (notes.length === 0) {
+    return <div className="error">No notes to load...</div>
+  }
   return (
     <div className='note-list'>
       {notes.map(note => (

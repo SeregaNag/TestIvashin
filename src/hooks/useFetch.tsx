@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 interface Item {
-  id: number;
+  id?: number;
   title: string;
   tags: string[];
   description: string;
@@ -11,21 +11,33 @@ interface FetchResponse<T> {
   data: T[] | null;
   isPending: boolean;
   error: string | null;
+  postData: (postData: Item) => void;
 }
 
-export const useFetch = <T extends Item>(url: string): FetchResponse<T> => {
+export const useFetch = <T extends Item>(url: string, method = 'GET'): FetchResponse<T> => {
   const [data, setData] = useState<T[] | null>(null);
   const [isPending, setIsPending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [options, setOptions] = useState<RequestInit | null>(null);
+
+  const postData = (postData: Item) => {
+    setOptions({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(postData)
+    });
+  };
 
   useEffect(() => {
     const controller = new AbortController();
 
-    const fetchData = async () => {
+    const fetchData = async (fetchOptions: RequestInit | null) => {
       setIsPending(true);
 
       try {
-        const res = await fetch(url, { signal: controller.signal });
+        const res = await fetch(url, {...fetchOptions, signal: controller.signal });
         if (!res.ok) {
           throw new Error(res.statusText);
         }
@@ -44,12 +56,17 @@ export const useFetch = <T extends Item>(url: string): FetchResponse<T> => {
       }
     };
 
-    fetchData();
+    if (method === "GET") {
+      fetchData(null);
+    }
+    if (method === "POST" && options) {
+      fetchData(options);
+    }
 
     return () => {
       controller.abort();
     };
-  }, [url]);
+  }, [url, options, method]);
 
-  return { data, isPending, error };
+  return { data, isPending, error, postData };
 };
