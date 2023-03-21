@@ -1,10 +1,10 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import './Note.scss';
-import { useParams } from 'react-router-dom';
-import { useFetch } from '../../hooks/useFetch';
+import { Link, useParams } from 'react-router-dom';
+import { projectFirestore } from '../../firebase/config';
 
 interface Item {
-  id: number;
+  id?: string;
   title: string;
   tags: string[];
   description: string;
@@ -12,8 +12,27 @@ interface Item {
 
 const Note: React.FC = () => {
   const { id } = useParams();
-  const url = 'http://localhost:3000/notes/' + id;
-  const { error, isPending, data } = useFetch(url);
+  
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<string | boolean>(false)
+  const [data, setData] = useState<Item | null>(null)
+
+  useEffect(() => {
+  setIsPending(true)
+
+  const unSubscribe = projectFirestore.collection('notes').doc(id).onSnapshot(doc => {
+    if (doc.exists) {
+      setIsPending(false)
+      setData(doc.data() as Item)
+    } else {
+      setIsPending(false)
+      setError(`Could not find that recipe`)
+    }
+  })
+
+  return () => unSubscribe()
+}, [id])
+  
   const newData: Item = {} as Item;
   if (data !== null) {
   Object.assign(newData, data);
@@ -30,6 +49,7 @@ const Note: React.FC = () => {
         <h2 className='page-title'>{newData.title}</h2>
         <p className='description'>{newData.description}</p>
         <ul>{newData.tags.map(tag => <li key={tag}>{tag}</li>)}</ul>
+        <Link className="button" to={`/edit/${id}`} state={{data: data, }}>Edit</Link>
         </>
       )}
     </div>

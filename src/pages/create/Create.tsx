@@ -1,7 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFetch } from '../../hooks/useFetch'
+import { projectFirestore } from '../../firebase/config';
 import './Create.scss';
+
+interface Item {
+  id?: string;
+  title: string;
+  tags: string[];
+  description: string;
+}
 
 const Create: React.FC = () => {
   const [title, setTitle] = useState('')
@@ -11,11 +18,18 @@ const Create: React.FC = () => {
   const tagInput = useRef<HTMLInputElement | null>(null)
   const navigate = useNavigate()
 
-  const { postData, data, error } = useFetch('http://localhost:3000/notes', 'POST')
+  
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    postData({ title, tags, description })
+    const doc: Item = { title, tags, description }
+
+    try {
+      await projectFirestore.collection('notes').add(doc)
+      navigate('/')
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   const handleAdd = (e: React.FormEvent) => {
@@ -30,13 +44,6 @@ const Create: React.FC = () => {
   tagInput.current.focus()
 }
   }
-
-  useEffect(() => {
-    if (data) {
-      navigate('/')
-    }
-  }, [data])
-  
 
   return (
     <div className="create">

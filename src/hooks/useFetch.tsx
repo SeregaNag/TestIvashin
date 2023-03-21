@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 interface Item {
-  id?: number;
+  id?: string;
   title: string;
   tags: string[];
   description: string;
