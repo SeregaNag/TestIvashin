@@ -28,6 +28,11 @@
     margin: 20px auto;
 }
 
+.edit textarea .higlight {
+    background-color: #58249c;
+        font-weight: bold;
+}
+
 .tags {
     display: flex;
     align-items: center;
@@ -35,4 +40,11 @@
 
 .tags button {
     margin: 0 0 0 10px;
+}
+
+.tag {
+    color: white;
+    background-color: #007bff;
+    padding: 2px 4px;
+    border-radius: 4px;
 }

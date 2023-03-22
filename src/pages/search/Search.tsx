@@ -1,33 +1,63 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
-import { useFetch } from '../../hooks/useFetch';
-import './Search.scss';
-import NoteList from '../../components/NoteList';
+import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { projectFirestore } from "../../firebase/config";
+ 
+//styles
+import "./Search.scss";
+//components
+import NoteList from "../../components/NoteList";
 
-const Search: React.FC = () => {
-  const queryString = useLocation().search
-  const queryParams = new URLSearchParams(queryString)
-  const query = queryParams.get('q')
-
-  let url = 'http://localhost:3000/notes';
-if (query) {
-  url += '?tags_like=' + encodeURIComponent(query);
+interface Item {
+  id?: string;
+  title: string;
+  tags: string[];
+  description: string;
 }
-
-const { error, isPending, data } = useFetch(url);
-
-  const filteredNotes = data?.filter((note) =>
-  note.tags.some((tag) => tag.includes(`#${query}`))
-);
-
+ 
+export default function Search() {
+  const queryString = useLocation().search;
+  const queryParams = new URLSearchParams(queryString);
+  const query = queryParams.get("q");
+ 
+  const [notes, setNotes] = useState<Item[] | null>(null);
+  const [error, setError] = useState<string | boolean>(false);
+  const [isPending, setIsPending] = useState(false);
+ 
+  useEffect(() => {
+    setIsPending(true);
+    const unsub = projectFirestore
+      .collection("notes")
+      .onSnapshot((snapshot) => {
+        if (snapshot.empty) {
+          setError("There are no such notes");
+          setIsPending(false);
+        } else {
+          let searchResults: Item[] = [];
+          snapshot.docs.forEach((doc) => {
+            if (query && doc.data().tags.some((tag: string) => tag.toLowerCase().includes(query.toLowerCase()))) {
+              searchResults.push({ description: doc.data().description, 
+            tags: doc.data().tags, 
+            title: doc.data().title,
+            id: doc.id, });
+            }
+          });
+          setNotes(searchResults);
+          setIsPending(false);
+        }
+      });
+    return () => unsub();
+  }, [query]);
+ 
   return (
     <div>
-      <h2 className='page-title'>Notes with "{query}" tags</h2>
-      {error && <p className='error'>{error}</p>}
-      {isPending && <p className='loading'>Loading...</p>}
-      {filteredNotes && <NoteList notes={filteredNotes} />}
+      <h2 className="page-title">Notes with "{query}" tags</h2>
+      {error && <p className="error">{error}</p>}
+      {isPending && <p className="loading">Loading...</p>}
+      {notes && (
+        <div className="search-results">
+          <NoteList notes={notes} />
+        </div>
+      )}
     </div>
   );
-};
-
-export default Search;
+}
