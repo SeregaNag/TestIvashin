@@ -50,7 +50,7 @@ const Note: React.FC = () => {
         <h2 className='page-title'>{newData.title}</h2>
         <p className='description'>{newData.description}</p>
         <ul>{newData.tags.map(tag => <li key={tag}>{tag}</li>)}</ul>
-        <Link className="button" to={`/edit/${id}`}>Edit</Link>
+        <Link className="btn" to={`/edit/${id}`}>Edit</Link>
         </>
       )}
     </div>
