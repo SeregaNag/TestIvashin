@@ -76,7 +76,6 @@ const Edit: React.FC = () => {
     setDescription(e.target.value);
     const newTags = extractTags(e.target.value);
     setTags(newTags);
-    console.log(e.target.value)
   };
 
   const extractTags = (text: string) => {
